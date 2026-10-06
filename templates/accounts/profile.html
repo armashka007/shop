@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Профиль - Интернет-магазин{% endblock %}
+
+{% block content %}
+<h1>Профиль пользователя</h1>
+
+<div style="background: white; padding: 20px; border-radius: 8px; margin-top: 20px;">
+    <h2>{{ user.username }}</h2>
+    <p style="color: #666;">Email: {{ user.email }}</p>
+    <p style="color: #666;">Присоединился: {{ user.date_joined|date:"d.m.Y" }}</p>
+    
+    <div style="margin-top: 20px;">
+        <a href="{% url 'accounts:logout' %}" style="
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #e74c3c;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        ">
+            Выйти
+        </a>
+    </div>
+</div>
+
+<h2 style="margin-top: 40px;">Мои заказы</h2>
+
+{% if orders %}
+    <div style="margin-top: 20px;">
+        {% for order in orders %}
+            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #3498db;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h3 style="margin: 0;">Заказ #{{ order.id }}</h3>
+                        <p style="margin: 5px 0; color: #666;">Дата: {{ order.created_at|date:"d.m.Y H:i" }}</p>
+                        <p style="margin: 5px 0; color: #666;">Статус: <strong>{{ order.get_status_display }}</strong></p>
+                        <p style="margin: 5px 0; color: #666;">Общая сумма: <strong>{{ order.get_total_price }} тг</strong></p>
+                    </div>
+                    <a href="{% url 'orders:detail' order.id %}" style="
+                        padding: 10px 20px;
+                        background-color: #3498db;
+                        color: white;
+                        text-decoration: none;
+                        border-radius: 4px;
+                    ">
+                        Подробнее
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p style="text-align: center; color: #999; padding: 40px 20px;">
+        У вас нет заказов. <a href="{% url 'catalog:home' %}" style="color: #3498db;">Начать покупки</a>
+    </p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}{% if category %}{{ category.name }}{% else %}Все товары{% endif %} - Интернет-магазин{% endblock %}
+
+{% block content %}
+<h1>{% if category %}{{ category.name }}{% else %}Все товары{% endif %}</h1>
+
+<div class="filters">
+    <form method="get" style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px; align-items: flex-end;">
+        <div class="filter-group">
+            <label for="q">Поиск</label>
+            <input type="text" id="q" name="q" value="{{ search_query }}" placeholder="Введите название...">
+        </div>
+        
+        <div class="filter-group">
+            <label for="sort">Сортировка</label>
+            <select id="sort" name="sort">
+                <option value="name" {% if sort_by == 'name' %}selected{% endif %}>По названию</option>
+                <option value="price_asc" {% if sort_by == 'price_asc' %}selected{% endif %}>Цена: возр.</option>
+                <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>Цена: убыв.</option>
+                <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Новинки</option>
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label><input type="checkbox" name="in_stock" value="1" {% if in_stock_only %}checked{% endif %}> В наличии</label>
+        </div>
+        
+        <div>
+            <button type="submit" style="width: 100%; padding: 10px; background-color: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Применить
+            </button>
+        </div>
+    </form>
+</div>
+
+{% if products %}
+    <div class="products-grid">
+        {% for product in products %}
+            <div class="product-card">
+                <a href="{% url 'catalog:product_detail' product.slug %}">
+                    {% if product.images.all %}
+                        <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" class="product-image">
+                    {% else %}
+                        <div class="product-image" style="display: flex; align-items: center; justify-content: center; background-color: #e0e0e0;">
+                            Нет изображения
+                        </div>
+                    {% endif %}
+                </a>
+                
+                <div class="product-info">
+                    <a href="{% url 'catalog:product_detail' product.slug %}" style="text-decoration: none; color: inherit;">
+                        <div class="product-name">{{ product.name }}</div>
+                    </a>
+                    
+                    {% if product.description %}
+                        <div class="product-description" data-full-description="{{ product.description }}">
+                            {{ product.description|truncatechars:120 }}
+                        </div>
+                    {% endif %}
+                    
+                    <div>
+                        {% if product.old_price and product.old_price > product.price %}
+                            <span class="product-old-price">{{ product.old_price }} тг</span>
+                            <span class="product-price">{{ product.price }} тг</span>
+                        {% else %}
+                            <span class="product-price">{{ product.price }} тг</span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if product.stock > 0 %}
+                        <span class="badge badge-available">В наличии: {{ product.stock }}</span>
+                    {% else %}
+                        <span class="badge badge-unavailable">Нет в наличии</span>
+                    {% endif %}
+                </div>
+                
+                <div class="product-actions">
+                    {% if product.stock > 0 %}
+                        <form method="post" action="{% url 'cart:add' product.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="quantity" value="1">
+                            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                                🛒 Добавить в корзину
+                            </button>
+                        </form>
+                        <form method="post" action="{% url 'cart:add' product.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="quantity" value="1">
+                            <input type="hidden" name="redirect" value="checkout">
+                            <button type="submit" class="btn btn-success">
+                                Купить сейчас
+                            </button>
+                        </form>
+                    {% else %}
+                        <button class="btn" disabled style="width: 100%;">
+                            Нет в наличии
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    
+    {% if products.has_other_pages %}
+        <div class="pagination">
+            <span class="step-links">
+                {% if products.has_previous %}
+                    <a href="?page=1{% if search_query %}&q={{ search_query }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">Первая</a>
+                    <a href="?page={{ products.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">← Предыдущая</a>
+                {% endif %}
+                
+                <span class="current">
+                    Страница {{ products.number }} из {{ products.paginator.num_pages }}
+                </span>
+                
+                {% if products.has_next %}
+                    <a href="?page={{ products.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">Следующая →</a>
+                    <a href="?page={{ products.paginator.num_pages }}{% if search_query %}&q={{ search_query }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">Последняя</a>
+                {% endif %}
+            </span>
+        </div>
+    {% endif %}
+{% else %}
+    <p style="text-align: center; margin-top: 40px; color: #999; font-size: 18px;">
+        Товары не найдены.
+    </p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Заказ успешно создан - Интернет-магазин{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 50px auto;">
+    <div style="background: white; padding: 40px; border-radius: 8px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        <h1 style="color: #27ae60; margin-bottom: 10px;">✓ Спасибо за заказ!</h1>
+        <p style="font-size: 18px; color: #666; margin-bottom: 30px;">
+            Ваш заказ успешно создан и будет обработан в ближайшее время.
+        </p>
+        
+        <div style="background-color: #f0f0f0; padding: 20px; border-radius: 8px; text-align: left; margin-bottom: 30px;">
+            <h3 style="margin-top: 0;">Информация о заказе</h3>
+            
+            <p style="margin: 10px 0;">
+                <strong>Номер заказа:</strong> #{{ order.id }}
+            </p>
+            <p style="margin: 10px 0;">
+                <strong>Статус:</strong> {{ order.get_status_display }}
+            </p>
+            <p style="margin: 10px 0;">
+                <strong>ФИО:</strong> {{ order.full_name }}
+            </p>
+            <p style="margin: 10px 0;">
+                <strong>Телефон:</strong> {{ order.phone }}
+            </p>
+            <p style="margin: 10px 0;">
+                <strong>Адрес:</strong> {{ order.address }}
+            </p>
+            <p style="margin: 10px 0;">
+                <strong>Сумма заказа:</strong> <span style="color: #27ae60; font-weight: bold;">{{ order.get_total_price }} тг</span>
+            </p>
+            <p style="margin: 10px 0;">
+                <strong>Дата заказа:</strong> {{ order.created_at|date:"d.m.Y H:i" }}
+            </p>
+        </div>
+        
+        <h3>Товары в заказе</h3>
+        <table style="width: 100%; margin-bottom: 30px;">
+            <thead>
+                <tr style="background-color: #f9f9f9; border-bottom: 1px solid #ddd;">
+                    <th style="padding: 10px; text-align: left;">Товар</th>
+                    <th style="padding: 10px; text-align: center;">Кол-во</th>
+                    <th style="padding: 10px; text-align: right;">Цена</th>
+                    <th style="padding: 10px; text-align: right;">Сумма</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in order.items.all %}
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 10px;">{{ item.product.name }}</td>
+                        <td style="padding: 10px; text-align: center;">{{ item.quantity }}</td>
+                        <td style="padding: 10px; text-align: right;">{{ item.price }} тг</td>
+                        <td style="padding: 10px; text-align: right; font-weight: bold;">{{ item.get_total_price }} тг</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <div style="display: flex; gap: 15px; justify-content: center;">
+            <a href="{% url 'orders:track' order.id %}" style="
+                padding: 12px 30px;
+                background-color: #f39c12;
+                color: white;
+                text-decoration: none;
+                border-radius: 4px;
+                display: inline-block;
+            ">
+                Отследить заказ
+            </a>
+            
+            {% if user.is_authenticated %}
+                <a href="{% url 'orders:my_orders' %}" style="
+                    padding: 12px 30px;
+                    background-color: #3498db;
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 4px;
+                    display: inline-block;
+                ">
+                    Мои заказы
+                </a>
+            {% endif %}
+            
+            <a href="{% url 'catalog:home' %}" style="
+                padding: 12px 30px;
+                background-color: #27ae60;
+                color: white;
+                text-decoration: none;
+                border-radius: 4px;
+                display: inline-block;
+            ">
+                Продолжить покупки
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

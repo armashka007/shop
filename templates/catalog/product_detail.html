@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }} - Интернет-магазин{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 40px;">
+    <!-- Image Gallery -->
+    <div>
+        <h2>Фотографии</h2>
+        {% if product.images.all %}
+            <div style="margin-bottom: 20px;">
+                {% for img in product.images.all %}
+                    <a href="{{ img.image.url }}" target="_blank" style="display: inline-block; margin-right: 10px; margin-bottom: 10px;">
+                        <img src="{{ img.image.url }}" alt="{{ img.alt_text }}"
+                             style="width: 120px; height: 120px; object-fit: cover; border-radius: 8px; cursor: pointer; transition: transform 0.3s;"
+                             onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div style="background-color: #e0e0e0; height: 300px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #999;">
+                Фотографий нет
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Product Info -->
+    <div>
+        <h1>{{ product.name }}</h1>
+        
+        <!-- Category -->
+        <p style="color: #666; margin-bottom: 15px;">
+            Категория: 
+            <a href="{% url 'catalog:product_list' product.category.slug %}" style="color: #3498db; text-decoration: none;">
+                {{ product.category.name }}
+            </a>
+        </p>
+        
+        <!-- Availability Badge -->
+        {% if product.stock > 0 %}
+            <div class="badge badge-available" style="padding: 10px 15px; font-size: 16px;">
+                ✓ В наличии: {{ product.stock }} шт.
+            </div>
+        {% else %}
+            <div class="badge badge-unavailable" style="padding: 10px 15px; font-size: 16px;">
+                ✗ Нет в наличии
+            </div>
+        {% endif %}
+        
+        <!-- Price -->
+        <div style="margin: 30px 0; padding: 20px; background-color: #f9f9f9; border-radius: 8px;">
+            {% if product.old_price and product.old_price > product.price %}
+                <p style="margin: 0; color: #999;">
+                    <span style="text-decoration: line-through;">{{ product.old_price }} тг</span>
+                </p>
+                <p style="margin: 10px 0 0 0; font-size: 28px; font-weight: bold; color: #27ae60;">
+                    {{ product.price }} тг
+                </p>
+                <p style="margin: 10px 0 0 0; color: #e74c3c;">
+                    Скидка: {{ product.old_price|add:"-product.price" }} тг
+                </p>
+            {% else %}
+                <p style="margin: 0; font-size: 28px; font-weight: bold; color: #2c3e50;">
+                    {{ product.price }} тг
+                </p>
+            {% endif %}
+        </div>
+        
+        <!-- Description -->
+        {% if product.description %}
+            <div>
+                <h3>Описание</h3>
+                <div id="product-description" style="line-height: 1.6; color: #666; max-height: 150px; overflow: hidden; position: relative;">
+                    {{ product.description }}
+                    {% if product.description|length > 300 %}
+                        <div id="description-gradient" style="position: absolute; bottom: 0; left: 0; right: 0; height: 50px; background: linear-gradient(transparent, white);"></div>
+                        <button id="toggle-description" style="display: block; margin: 10px auto; padding: 8px 16px; background-color: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                            Показать полностью
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+        
+        <!-- Add to Cart Button -->
+        {% if product.stock > 0 %}
+            <div style="display: flex; gap: 10px; margin-top: 30px;">
+                <form action="{% url 'cart:add' product.id %}" method="post" style="flex: 1;">
+                    {% csrf_token %}
+                    <input type="hidden" name="product_id" value="{{ product.id }}">
+                    <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 20px;">
+                        <label for="quantity">Количество:</label>
+                        <input type="number" id="quantity" name="quantity" value="1" min="1" max="{{ product.stock }}" 
+                               style="width: 80px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    </div>
+                    <button type="submit" style="width: 100%; padding: 15px; background-color: #3498db; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; transition: background-color 0.3s;"
+                            onmouseover="this.style.backgroundColor='#2980b9'" onmouseout="this.style.backgroundColor='#3498db'">
+                        🛒 Добавить в корзину
+                    </button>
+                </form>
+                
+                <form action="{% url 'cart:add' product.id %}" method="post" style="flex: 1;">
+                    {% csrf_token %}
+                    <input type="hidden" name="product_id" value="{{ product.id }}">
+                    <input type="hidden" name="quantity" value="1">
+                    <input type="hidden" name="redirect" value="checkout">
+                    <button type="submit" style="width: 100%; padding: 15px; background-color: #27ae60; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; transition: background-color 0.3s;"
+                            onmouseover="this.style.backgroundColor='#229954'" onmouseout="this.style.backgroundColor='#27ae60'">
+                        ⚡ Купить сейчас
+                    </button>
+                </form>
+            </div>
+        {% else %}
+            <button disabled style="width: 100%; padding: 15px; background-color: #bdc3c7; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: not-allowed; margin-top: 30px;">
+                Товар недоступен
+            </button>
+        {% endif %}
+        
+        <!-- Additional Info -->
+        <div style="margin-top: 40px; padding: 20px; background-color: #f0f0f0; border-radius: 8px; font-size: 14px; color: #666;">
+            <p>📦 <strong>Артикул:</strong> {{ product.id }}</p>
+            <p>📅 <strong>Добавлен:</strong> {{ product.created_at|date:"d.m.Y" }}</p>
+            <p>🔄 <strong>Обновлен:</strong> {{ product.updated_at|date:"d.m.Y H:i" }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- Related Products -->
+<div style="margin-top: 60px; padding-top: 40px; border-top: 1px solid #ddd;">
+    <h2>Другие товары в категории</h2>
+    <div class="products-grid">
+        {% for p in product.category.products.all|slice:":4" %}
+            {% if p.id != product.id %}
+                <div class="product-card">
+                    <a href="{% url 'catalog:product_detail' p.slug %}">
+                        {% if p.images.all %}
+                            <img src="{{ p.images.first.image.url }}" alt="{{ p.name }}" class="product-image">
+                        {% else %}
+                            <div class="product-image" style="display: flex; align-items: center; justify-content: center; background-color: #e0e0e0;">
+                                Нет изображения
+                            </div>
+                        {% endif %}
+                    </a>
+                    
+                    <div class="product-info">
+                        <a href="{% url 'catalog:product_detail' p.slug %}" style="text-decoration: none; color: inherit;">
+                            <div class="product-name">{{ p.name }}</div>
+                        </a>
+                        
+                        {% if p.description %}
+                            <div class="product-description" data-full-description="{{ p.description }}">
+                                {{ p.description|truncatechars:100 }}
+                            </div>
+                        {% endif %}
+                        
+                        <div>
+                            {% if p.old_price and p.old_price > p.price %}
+                                <span class="product-old-price">{{ p.old_price }} тг</span>
+                                <span class="product-price">{{ p.price }} тг</span>
+                            {% else %}
+                                <span class="product-price">{{ p.price }} тг</span>
+                            {% endif %}
+                        </div>
+                        
+                        {% if p.stock > 0 %}
+                            <span class="badge badge-available">В наличии</span>
+                        {% else %}
+                            <span class="badge badge-unavailable">Нет в наличии</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="product-actions">
+                        {% if p.stock > 0 %}
+                            <form method="post" action="{% url 'cart:add' p.id %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="quantity" value="1">
+                                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                                    🛒 В корзину
+                                </button>
+                            </form>
+                        {% else %}
+                            <button class="btn" disabled style="width: 100%;">
+                                Нет в наличии
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
